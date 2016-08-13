@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<title>Drone Controller v0.0.1</title>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	var socket = io();
+
+	function sendInstruction(inst) {
+		var instructionPackage = JSON.stringify(inst);
+		socket.emit('clicky-instruction', instructionPackage);
+	}
+
+	var clicky_instruction = class {
+	  constructor(inst) {
+	    this.instruction = inst;
+	  }
+	};
+
+	//get results
+	socket.on('send_counter_value', function(value){
+		// console.log(value);
+		document.getElementById("the_number").innerHTML = value;
+		checkbuttons(value);
+	});
+
+
+	function checkbuttons(k){
+		if (k > 10){
+			document.getElementById("docounter").disabled = false;
+		} else {
+			document.getElementById("docounter").disabled = true;
+		}
+		// if (k > 20){
+		// 	document.getElementById()
+		// }
+	}
+
+	</script>
+</head>
+<body>
+<h1>Clicky Game</h1>
+<h1 id="the_number">0</h1>
+<p>You literally try to get as many points as you can by clicking the button.</p>
+
+<div class="drone-control-group">
+	<button class="drone-control" onclick="sendInstruction(new clicky_instruction('CLICK'));" id="clickme" type="button">Click Me</button>
+	<button class="drone-control" onclick="sendInstruction(new clicky_instruction('COUNT'));" id="docounter" disabled="true" type="button">Do Counter</button>
+</div>
+
+
+
+</body></html>

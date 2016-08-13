@@ -1,0 +1,22 @@
+{
+  "name": "clickygame",
+  "version": "1.0.0",
+  "description": "a clicky game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "clicky",
+    "js",
+    "node",
+    "socket",
+    "lol"
+  ],
+  "author": "Thien P. Nguyen",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.14.0",
+    "socket.io": "^1.4.8"
+  }
+}

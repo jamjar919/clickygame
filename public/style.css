@@ -1,0 +1,12 @@
+body {
+ background-color: #fff;
+}
+#drone-control {
+	width: 10em;
+	height: 10em;
+}
+
+#drone-control-group {
+	display: inline-block;
+	width: 33%;
+}
