@@ -7,10 +7,14 @@
 
 // load necessary variables for system
 	var uniqueSocketID = 0;
+	// counting # of players seperately to counting a list of connected players is more efficent.
+	var players_online = 0;
 	var openConnections = [];
 	var instructionsStack = [];
 	//number of miliseconds per iteration
 	var timeMiliPerIteration = 1;
+	var clockIteration = 10;
+	var playerList = [];
 
 	class Connection {
 		constructor(socket, id){
@@ -22,10 +26,30 @@
 	}
 
 // load game variables (for testing for one player)
-	var game_counter = 0;
-	var clocky = false;
-	var clocky_multiplier = 1000;
-	var check = false;
+
+	function player(id, socket){
+		this.socket = socket;
+		this.id = id;
+		this.counter = 0;
+		this.unlockables = new unlockables(id);
+		this.increment = function(number){
+			this.counter = this.counter + number;
+		}
+	}
+
+	function unlockables(id) {
+		this.id = id;
+		this.timer = false;
+		this.multiplier = 1;
+		this.check - false;
+		this.clock_multiplier = 1000;
+		this.clock_increment = 0.001;
+		this.clock = false;
+
+		this.incrementMultiplier = function(number){
+			this.multiplier = number;
+		}
+	}
 
 //initiate express
 	app.use(express.static('public'));
@@ -40,34 +64,70 @@
 	});
 
 io.on('connect', function(socket){
-	var thisSocketID = uniqueSocketID;
-	uniqueSocketID++;
+	var datSocketID = socket.id;
+	console.log('client ' + datSocketID + ' has joined the server');
+	// console.log(openConnections);
 
-	openConnections.push(new Connection(uniqueSocketID,thisSocketID));
-	console.log('client ' + thisSocketID + ' has joined the server');
-	console.log(openConnections);
+	//send number of players online, to everyone.
+	listPlayersOnline("+");
 
+	//adds this socket to the list of players.
+	playerList.push(new player(socket.id, socket));
 
+	//print players
+	printPlayers();
+
+	//just be weary that each socket represents an individual player.
 	socket.on('clicky-instruction', function(instructionPackage){
 		var Instruction = JSON.parse(instructionPackage);
+		Instruction.id = socket.id; //append socket id so we can process it according to player.
 		instructionsStack.push(Instruction);
-		clicky_mechanics();
-
-		sendclock(socket);
 	});
 
 
 	socket.on('disconnect', function() {
-		console.log('client ' + thisSocketID + ' has left the server; ' + openConnections.length + ' connections left.');
+		// display players online.
+		listPlayersOnline("-");
 
-		openConnections = openConnections.filter(function(openConnections){
-			return openConnections.id !== thisSocketID;
-		});
+		//remove from player list
+		playerList = playerList.filter(function(connections){return connections.id !== datSocketID;});
+
+		//print players
+		printPlayers();
 	});
 });
 
-function sendclock(socket){
-	socket.emit("send_counter_value", game_counter);
+function printPlayers(){
+	for (i = 0; i < playerList.length; i++) {
+	    console.log(playerList[i].id);
+	}
+}
+
+// count the number of players online.
+function listPlayersOnline(val){
+	if (val == "+"){
+		players_online++;
+	} else if (val == "-") {
+		players_online--;
+	}
+	io.sockets.emit("players_online", players_online);
+}
+
+//finds a player in the Player List
+function findPlayer(playerid){
+	return playerList.filter(function (element) {
+		return element.id === playerid;})[0];
+}
+
+// calculate difference and sends it to socket.
+function doDifference(user, val){
+	//we'll need to find the player in relation to the id.
+	user.increment(val);
+	sendclockPlayer(user);
+}
+
+function sendclockPlayer(player){
+	player.socket.emit("send_counter_value", Math.floor(player.counter));
 };
 
 //function to parse and manage controls of the inputs
@@ -75,22 +135,18 @@ function clickyControl(){
 	while (instructionsStack.length != 0){
 		console.log("Instruction execeuting");
 		var Instruction = instructionsStack.pop();
+		usr = findPlayer(Instruction.id);
 		switch(Instruction.instruction) {
 			// don't have a drone to test.
 		    case "CLICK":
-		   		game_counter++;
-		    	console.log("incremented click");
+		   		doDifference(usr, 1);
+		    	// console.log("incremented click");
 		    	break;
-		   	case "COUNT":
-		   		clocky = true;
-		   		console.log("clocky enabled");
-		   		game_counter = game_counter - 10;
-		   		break;
-		   	case "ANIMATE_CIRCLE":
-		   		break;
-		   	case "ANIMATE_RECTANGLE":
-		   		break;
-		   	case "ANIMATE_PENTAGON":
+		   	case "CLOCK":
+		   		usr.unlockables.clock = true;
+		   		usr.unlockables.clock_increment+= 0.001;
+		   		// console.log("clocky enabled");
+		   		doDifference(usr, -10);
 		   		break;
 		    default:
 				break;
@@ -98,22 +154,17 @@ function clickyControl(){
 	}
 };
 
-//function that deals with
-function clocky(){
-	while (clocky == true){
-		setInterval(upclick(), clocky_multiplier);
+//function that deals wits updating clocks.
+function updateClocksForPlayers() {
+	for (i = 0; i < playerList.length; i++){
+		var user = playerList[i];
+		if (user.unlockables.clock == true){
+			doDifference(user, user.unlockables.clock_increment);
+		}
 	}
 }
 
-//function to manage multipliers and incrementers
-function clicky_mechanics(){
-}
-
-while (clocky == true){
-	setInterval(upclick(), clocky_multiplier);
-	sendclock(socket);
-}
-
+setInterval(updateClocksForPlayers, clockIteration);
 setInterval(clickyControl, timeMiliPerIteration);
 
 

@@ -2,9 +2,10 @@
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="style.css">
-	<title>Drone Controller v0.0.1</title>
+	<title>The Clicky Game</title>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
+	// initiate socket.io goods
 	var socket = io();
 
 	function sendInstruction(inst) {
@@ -25,9 +26,13 @@
 		checkbuttons(value);
 	});
 
+	//get results
+	socket.on('players_online', function(value){
+		document.getElementById("online_players").innerHTML = value;
+	});
 
 	function checkbuttons(k){
-		if (k > 10){
+		if (k >= 10){
 			document.getElementById("docounter").disabled = false;
 		} else {
 			document.getElementById("docounter").disabled = true;
@@ -46,9 +51,9 @@
 
 <div class="drone-control-group">
 	<button class="drone-control" onclick="sendInstruction(new clicky_instruction('CLICK'));" id="clickme" type="button">Click Me</button>
-	<button class="drone-control" onclick="sendInstruction(new clicky_instruction('COUNT'));" id="docounter" disabled="true" type="button">Do Counter</button>
+	<button class="drone-control" onclick="sendInstruction(new clicky_instruction('CLOCK'));" id="docounter" disabled="true" type="button">Do Counter</button>
 </div>
 
-
+There are <i id="online_players">0</i> players online.
 
 </body></html>
