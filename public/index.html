@@ -31,11 +31,21 @@
 		document.getElementById("online_players").innerHTML = value;
 	});
 
+	//get results
+	socket.on('player_properties', function(value){
+		document.getElementById("player_props").innerHTML = value;
+	});
+
 	function checkbuttons(k){
 		if (k >= 10){
 			document.getElementById("docounter").disabled = false;
 		} else {
 			document.getElementById("docounter").disabled = true;
+		}
+		if (k >= 100){
+			document.getElementById("strike10x").disabled = false;
+		} else {
+			document.getElementById("strike10x").disabled = true;
 		}
 		// if (k > 20){
 		// 	document.getElementById()
@@ -49,11 +59,15 @@
 <h1 id="the_number">0</h1>
 <p>You literally try to get as many points as you can by clicking the button.</p>
 
-<div class="drone-control-group">
-	<button class="drone-control" onclick="sendInstruction(new clicky_instruction('CLICK'));" id="clickme" type="button">Click Me</button>
-	<button class="drone-control" onclick="sendInstruction(new clicky_instruction('CLOCK'));" id="docounter" disabled="true" type="button">Do Counter</button>
+<div class="clicky-control-group">
+	<button class="clicky-control" onclick="sendInstruction(new clicky_instruction('CLICK'));" id="clickme" type="button">Click Me</button>
+	<button class="clicky-control" onclick="sendInstruction(new clicky_instruction('CLOCK'));" id="docounter" disabled="true" type="button">Set up Clock</button>
+	<button class="clicky-control" onclick="sendInstruction(new clicky_instruction('10X'));" id="strike10x" type="button">Strike 10x</button>
+	<input type="text" name="username" value="">;
 </div>
 
 There are <i id="online_players">0</i> players online.
+
+<textarea id="player_props"></textarea>
 
 </body></html>

@@ -28,10 +28,12 @@
 // load game variables (for testing for one player)
 
 	function player(id, socket){
+		this.name = randomNameGenerator();
 		this.socket = socket;
 		this.id = id;
 		this.counter = 0;
 		this.unlockables = new unlockables(id);
+		this.requirements = new unlockables_costs(id);
 		this.increment = function(number){
 			this.counter = this.counter + number;
 		}
@@ -49,6 +51,12 @@
 		this.incrementMultiplier = function(number){
 			this.multiplier = number;
 		}
+	}
+
+	function unlockables_costs(id){
+		this.clock = 100;
+		this.multiplier = 10;
+		this.tenx = 1000;
 	}
 
 //initiate express
@@ -71,8 +79,12 @@ io.on('connect', function(socket){
 	//send number of players online, to everyone.
 	listPlayersOnline("+");
 
+	//initialise player class
+	var socket_player = new player(socket.id, socket);
+	sendPlayerProperties(socket_player);
+
 	//adds this socket to the list of players.
-	playerList.push(new player(socket.id, socket));
+	playerList.push(socket_player);
 
 	//print players
 	printPlayers();
@@ -97,6 +109,8 @@ io.on('connect', function(socket){
 	});
 });
 
+
+//print # of players
 function printPlayers(){
 	for (i = 0; i < playerList.length; i++) {
 	    console.log(playerList[i].id);
@@ -119,11 +133,21 @@ function findPlayer(playerid){
 		return element.id === playerid;})[0];
 }
 
+//random string generator
+function randomNameGenerator(){
+	//generate some string.
+	return Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+}
+
 // calculate difference and sends it to socket.
 function doDifference(user, val){
 	//we'll need to find the player in relation to the id.
 	user.increment(val);
 	sendclockPlayer(user);
+}
+
+function sendPlayerProperties(player){
+	player.socket.emit("player_properties", player.name);
 }
 
 function sendclockPlayer(player){
@@ -133,26 +157,37 @@ function sendclockPlayer(player){
 //function to parse and manage controls of the inputs
 function clickyControl(){
 	while (instructionsStack.length != 0){
-		console.log("Instruction execeuting");
+		// console.log("Instruction execeuting");
 		var Instruction = instructionsStack.pop();
 		usr = findPlayer(Instruction.id);
 		switch(Instruction.instruction) {
 			// don't have a drone to test.
 		    case "CLICK":
-		   		doDifference(usr, 1);
+		   		doDifference(usr, 1 * usr.unlockables.multiplier);
 		    	// console.log("incremented click");
 		    	break;
 		   	case "CLOCK":
-		   		usr.unlockables.clock = true;
-		   		usr.unlockables.clock_increment+= 0.001;
+		   		console.log("do clock");
+		   		console.log(usr.requirements.clock);
+		   		if (usr.counter >= usr.requirements.clock){
+		   			usr.unlockables.clock = true;
+		   			usr.unlockables.clock_increment+= 0.001;
+		   			doDifference(usr, -10);
+		   		}
 		   		// console.log("clocky enabled");
-		   		doDifference(usr, -10);
 		   		break;
+		   	case "10X":
+		   		if (usr.counter >= usr.requirements.tenx){
+			   		usr.unlockables.multiplier+= 10;
+			   		doDifference(usr, -100);
+			   	}
 		    default:
 				break;
 		}
 	}
 };
+
+
 
 //function that deals wits updating clocks.
 function updateClocksForPlayers() {
