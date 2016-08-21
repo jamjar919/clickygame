@@ -7,6 +7,7 @@
 	<script>
 	// initiate socket.io goods
 	var socket = io();
+	var unlock_reqs;
 
 	function sendInstruction(inst) {
 		var instructionPackage = JSON.stringify(inst);
@@ -22,27 +23,36 @@
 	//get results
 	socket.on('send_counter_value', function(value){
 		// console.log(value);
-		document.getElementById("the_number").innerHTML = value;
-		checkbuttons(value);
+		document.getElementById("the_number").innerHTML = Math.floor(value);
+		check_requirements(value);
 	});
 
-	//get results
+	//get number of players online
 	socket.on('players_online', function(value){
 		document.getElementById("online_players").innerHTML = value;
 	});
 
-	//get results
+	socket.on('player_unlockable_requirements', function(value){
+		unlock_reqs = value;
+		console.log(value);
+		document.getElementById("click_cost").innerHTML = value;
+		document.getElementById("clock_cost").innerHTML = value.clock;
+		document.getElementById("strike_cost").innerHTML = value.tenx;
+		check_requirements(value);
+	});
+
+	//get player properties
 	socket.on('player_properties', function(value){
 		document.getElementById("player_props").innerHTML = value;
 	});
 
-	function checkbuttons(k){
-		if (k >= 10){
+	function check_requirements(k){
+		if (k >= unlock_reqs.clock){
 			document.getElementById("docounter").disabled = false;
 		} else {
 			document.getElementById("docounter").disabled = true;
 		}
-		if (k >= 100){
+		if (k >= unlock_reqs.tenx){
 			document.getElementById("strike10x").disabled = false;
 		} else {
 			document.getElementById("strike10x").disabled = true;
@@ -59,12 +69,34 @@
 <h1 id="the_number">0</h1>
 <p>You literally try to get as many points as you can by clicking the button.</p>
 
-<div class="clicky-control-group">
-	<button class="clicky-control" onclick="sendInstruction(new clicky_instruction('CLICK'));" id="clickme" type="button">Click Me</button>
-	<button class="clicky-control" onclick="sendInstruction(new clicky_instruction('CLOCK'));" id="docounter" disabled="true" type="button">Set up Clock</button>
-	<button class="clicky-control" onclick="sendInstruction(new clicky_instruction('10X'));" id="strike10x" type="button">Strike 10x</button>
-	<input type="text" name="username" value="">;
-</div>
+<input type="text" name="username" value="">
+<table style="width:100%">
+  <tr>
+    <th>Type</th>
+    <th>Description</th>
+    <th>Cost</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+    <td>Click</td>
+    <td>what do you think</td>
+    <td id="click_cost">0</td>
+    <td><button class="clicky-control" onclick="sendInstruction(new clicky_instruction('CLICK'));" id="clickme" type="button">Click Me</button></td>
+  </tr>
+  <tr>
+    <td>Clock</td>
+    <td>Points per second</td>
+    <td id="clock_cost"></td>
+    <td><button class="clicky-control" onclick="sendInstruction(new clicky_instruction('CLOCK'));" id="docounter" disabled="true" type="button">Set up Clock</button></td>
+  </tr>
+  <tr>
+    <td>Strike</td>
+    <td>Increase clicks by 10x</td>
+    <td id="strike_cost"></td>
+    <td><button class="clicky-control" onclick="sendInstruction(new clicky_instruction('10X'));" id="strike10x" type="button">Strike 10x</button></td>
+  </tr>
+</table>
+
 
 There are <i id="online_players">0</i> players online.
 
