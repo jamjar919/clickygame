@@ -22,35 +22,36 @@
 		}
 	}
 
-	function Connections(){
-		//list that contains players online
-		var player_list = [];
-		//add player
-		this.addPlayer = function(player){
-			player_list.push(player);
+	class Connections {
+		constructor(){
+			//list that contains players online
+			this.player_list = [];
+		};
+		addPlayer(player){
+			this.player_list.push(player);
 		}
-		this.findPlayer = function(playerid){
-			return player_list.filter(function (element) {
+		findPlayer(playerid){
+			return this.player_list.filter(function (element) {
 				return element.id === playerid;
 			})[0];
 		}
-		this.listPlayers = function(){
+		listPlayers(){
 			console.log("currently online");
-			for (i = 0; i < player_list.length; i++) {
-			    console.log(player_list[i].id);
+			for (i = 0; i < this.player_list.length; i++) {
+			    console.log(this.player_list[i].id);
 			}
 		}
-		this.listPlayersOnline = function(){
+		listPlayersOnline(){
 			io.sockets.emit("players_online", this.noPlayers());
 		}
-		this.noPlayers = function(){
-			return player_list.length;
+		noPlayers(){
+			return this.player_list.length;
 		}
-		this.sendPlayerList = function(){
-			return player_list;
+		sendPlayerList(){
+			return this.player_list;
 		}
-		this.removePlayerFromList = function(socket_id){
-			player_list = player_list.filter(
+		removePlayerFromList(socket_id){
+			this.player_list = this.player_list.filter(
 				function(player){
 					return player.id !== socket_id;
 				}
@@ -58,27 +59,26 @@
 		}
 	}
 
-// load game variables (for testing for one player)
-
-	function player(id, socket){
-		//generate random name.
-		this.name = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-		this.socket = socket;
-		this.id = id;
-		// var specialsocket = socket;
-		this.counter = 0;
-		this.unlockables = new unlockables(id);
-		this.requirements = new unlockables_costs(id);
-		this.increment = function(number){
+	class player {
+		constructor(id, socket){
+			//generate random name.
+			this.name = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+			this.socket = socket;
+			this.id = id;
+			this.counter = 0;
+			this.unlockables = new unlockables(id);
+			this.requirements = new unlockables_costs(id);
+		}
+		increment(number){
 			this.counter = this.counter + number;
 		}
-		this.sendCounter = function(){
+		sendCounter(){
 			this.socket.emit("send_counter_value", this.counter);
 		}
-		this.sendPlayerProperties = function(){
+		sendPlayerProperties(){
 			this.socket.emit("player_properties", this.name);
 		}
-		this.sendUnlockableRequirements = function(){
+		sendUnlockableRequirements(){
 			this.socket.emit("player_unlockable_requirements", this.requirements);
 		}
 	}
@@ -129,7 +129,7 @@
 
 
 //initialise connections
-var conn = new Connections;
+var conn = new Connections();
 
 io.on('connect', function(socket){
 	var datSocketID = socket.id;
