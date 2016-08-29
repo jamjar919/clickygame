@@ -6,14 +6,10 @@
 	var fs = require('fs');
 
 // load necessary variables for system
-	var uniqueSocketID = 0;
-	// counting # of players seperately to counting a list of connected players is more efficent.
-	var players_online = 0;
-	var openConnections = [];
 	var instructionsStack = [];
 	//number of miliseconds per iteration
-	var timeMiliPerIteration = 1;
-	var clockIteration = 10;
+	const timeMiliPerIteration = 1;
+	const clockIteration = 10;
 	var playerList = [];
 
 	class Connection {
@@ -27,7 +23,9 @@
 	}
 
 	function Connections(){
+		//list that contains players online
 		var player_list = [];
+		//add player
 		this.addPlayer = function(player){
 			player_list.push(player);
 		}
@@ -37,8 +35,9 @@
 			})[0];
 		}
 		this.listPlayers = function(){
-			for (i = 0; i < playerList.length; i++) {
-			    console.log(playerList[i].id);
+			console.log("currently online");
+			for (i = 0; i < player_list.length; i++) {
+			    console.log(player_list[i].id);
 			}
 		}
 		this.listPlayersOnline = function(){
@@ -51,7 +50,7 @@
 			return player_list;
 		}
 		this.removePlayerFromList = function(socket_id){
-			return player_list.filter(
+			player_list = player_list.filter(
 				function(player){
 					return player.id !== socket_id;
 				}
@@ -105,12 +104,13 @@
 		this.multiplier = 10;
 		this.tenx = 1000;
 		this.increaseClockCost = function(){
-			n = this.clock;
-			this.clock = (n^3 * (100-n))/(50);
+			this.clock = Math.pow(2.11/2, this.clock);
+			// n = this.clock;
+			// this.clock = (n^3 * (100-n))/(50);
 		}
 		this.increasetenxCost = function(){
-			n = this.tenx;
-			this.tenx = (n^3 * (150-n))/(50);
+			this.tenx = this.tenx ^ (3/2);
+			// this.tenx = (n^3 * (150-n))/(50);
 			// this.tenx = this.tenx * Math.log(this.tenx)/Math.log(10);
 		}
 	}
@@ -134,7 +134,6 @@ var conn = new Connections;
 io.on('connect', function(socket){
 	var datSocketID = socket.id;
 	console.log('client ' + datSocketID + ' has joined the server');
-	// console.log(openConnections);
 
 	//initialise player class
 	var socket_player = new player(socket.id, socket);
@@ -143,45 +142,28 @@ io.on('connect', function(socket){
 	//add player to connections
 	conn.addPlayer(socket_player);
 
-	//adds this socket to the list of players.
-	// playerList.push(socket_player);
-
 	//print players
 	conn.listPlayers();
 	conn.listPlayersOnline();
-	// printPlayers();
 
 	//initialise player requirements on client
 	socket_player.sendUnlockableRequirements();
-	// sendPlayerUnlockableRequirements(socket_player);
 
-	//just be weary that each socket represents an individual player.
 	socket.on('clicky-instruction', function(instructionPackage){
 		var Instruction = JSON.parse(instructionPackage);
-		Instruction.id = socket.id; //append socket id so we can process it according to player.
+		//append socket id so we can process it according to player.
+		Instruction.id = socket.id;
 		instructionsStack.push(Instruction);
 	});
 
-
 	socket.on('disconnect', function() {
-		// display players online.
-		// listPlayersOnline("-");
-		// conn.listPlayersOnline();
-		//remove from player list
-
-		// playerList = removeIDFromList(datSocketID);
-		conn.removePlayerFromList(datSocketID); //issue with removing player from list
+		//remove it from connections list
+		conn.removePlayerFromList(datSocketID);
 		//print players
-		console.log("removed player" + datSocketID);
 		conn.listPlayers();
 		conn.listPlayersOnline();
-		// printPlayers();
 	});
 });
-
-function removeIDFromList(socket_id){
-	return playerList.filter(function(connections){return connections.id !== socket_id;});
-}
 
 // calculate difference and sends it to socket.
 function doDifference(user, val){
@@ -198,17 +180,13 @@ function clickyControl(){
 		var Instruction = instructionsStack.pop();
 		usr = conn.findPlayer(Instruction.id);
 		switch(Instruction.instruction) {
-			// don't have a drone to test.
 		    case "CLICK":
 		   		doDifference(usr, 1 * usr.unlockables.multiplier);
 		    	// console.log("incremented click");
 		    	break;
 		   	case "CLOCK":
-		   		// console.log("do clock");
-		   		// console.log(usr.requirements.clock);
 		   		if (usr.counter >= usr.requirements.clock){
 		   			usr.unlockables.clock = true;
-		   			usr.unlockables.clock_increment+= 0.001;
 		   			doDifference(usr, -usr.requirements.clock);
 		   			usr.requirements.increaseClockCost();
 		   			usr.sendUnlockableRequirements();
@@ -217,11 +195,9 @@ function clickyControl(){
 		   		break;
 		   	case "10X":
 		   		if (usr.counter >= usr.requirements.tenx){
-			   		usr.unlockables.multiplier+= 10;
 			   		doDifference(usr, -usr.requirements.tenx);
 			   		usr.requirements.increasetenxCost();
 			   		usr.sendUnlockableRequirements();
-			   		// sendPlayerUnlockableRequirements(usr);
 			   	}
 		    default:
 				break;
@@ -229,7 +205,7 @@ function clickyControl(){
 	}
 };
 
-//function that deals wits updating clocks.
+//function that deals with updating clocks.
 function updateClocksForPlayers() {
 	for (i = 0; i < conn.noPlayers(); i++){
 		var user = conn.sendPlayerList()[i];
@@ -241,5 +217,3 @@ function updateClocksForPlayers() {
 
 setInterval(updateClocksForPlayers, clockIteration);
 setInterval(clickyControl, timeMiliPerIteration);
-
-

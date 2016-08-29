@@ -35,7 +35,7 @@
 	socket.on('player_unlockable_requirements', function(value){
 		unlock_reqs = value;
 		console.log(value);
-		document.getElementById("click_cost").innerHTML = value;
+		document.getElementById("click_cost").innerHTML = 0;
 		document.getElementById("clock_cost").innerHTML = value.clock;
 		document.getElementById("strike_cost").innerHTML = value.tenx;
 		check_requirements(value);
