@@ -6,58 +6,60 @@
 	var fs = require('fs');
 
 // load necessary variables for system
+	var conn = require('./config/connections.js');
+	// var player = require('./config/player.js');
 	var instructionsStack = [];
 	//number of miliseconds per iteration
 	const timeMiliPerIteration = 1;
 	const clockIteration = 10;
 	var playerList = [];
 
-	class Connection {
-		// var connectionList = [];
-		constructor(socket, id){
-			this.socket = socket;
-			this.id = id;
-			// var openConnections = []; //debatable
-			// var uniqueSocketID = 0; //debatable
-		}
-	}
+	// class Connection {
+	// 	// var connectionList = [];
+	// 	constructor(socket, id){
+	// 		this.socket = socket;
+	// 		this.id = id;
+	// 		// var openConnections = []; //debatable
+	// 		// var uniqueSocketID = 0; //debatable
+	// 	}
+	// }
 
-	class Connections {
-		constructor(){
-			//list that contains players online
-			this.player_list = [];
-		};
-		addPlayer(player){
-			this.player_list.push(player);
-		}
-		findPlayer(playerid){
-			return this.player_list.filter(function (element) {
-				return element.id === playerid;
-			})[0];
-		}
-		listPlayers(){
-			console.log("currently online");
-			for (i = 0; i < this.player_list.length; i++) {
-			    console.log(this.player_list[i].id);
-			}
-		}
-		listPlayersOnline(){
-			io.sockets.emit("players_online", this.noPlayers());
-		}
-		noPlayers(){
-			return this.player_list.length;
-		}
-		sendPlayerList(){
-			return this.player_list;
-		}
-		removePlayerFromList(socket_id){
-			this.player_list = this.player_list.filter(
-				function(player){
-					return player.id !== socket_id;
-				}
-			);
-		}
-	}
+	// class Connections {
+	// 	constructor(){
+	// 		//list that contains players online
+	// 		this.player_list = [];
+	// 	};
+	// 	addPlayer(player){
+	// 		this.player_list.push(player);
+	// 	}
+	// 	findPlayer(playerid){
+	// 		return this.player_list.filter(function (element) {
+	// 			return element.id === playerid;
+	// 		})[0];
+	// 	}
+	// 	listPlayers(){
+	// 		console.log("currently online");
+	// 		for (i = 0; i < this.player_list.length; i++) {
+	// 		    console.log(this.player_list[i].id);
+	// 		}
+	// 	}
+	// 	listPlayersOnline(){
+	// 		io.sockets.emit("players_online", this.noPlayers());
+	// 	}
+	// 	noPlayers(){
+	// 		return this.player_list.length;
+	// 	}
+	// 	sendPlayerList(){
+	// 		return this.player_list;
+	// 	}
+	// 	removePlayerFromList(socket_id){
+	// 		this.player_list = this.player_list.filter(
+	// 			function(player){
+	// 				return player.id !== socket_id;
+	// 			}
+	// 		);
+	// 	}
+	// }
 
 	class player {
 		constructor(id, socket){
@@ -129,7 +131,7 @@
 
 
 //initialise connections
-var conn = new Connections();
+// var conn = new Connections();
 
 io.on('connect', function(socket){
 	var datSocketID = socket.id;
